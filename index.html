@@ -1,0 +1,578 @@
+<html>
+  <div id="loadingIndicator" style="display: none; position: fixed; bottom: 50%; left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: 5px; background-color: rgba(0, 0, 0, 0.8); color: white; padding: 10px 20px; border-radius: 10px; font-size: 14px;">
+    <span style="color: White; font-size: 14px;">إنتظر قليلاً ...</span>
+  </div>
+
+        <head>
+<link rel="icon" href="https://img.icons8.com/color/96/subwoofer.png" type="image/x-icon">
+
+<title>غرفة التأمل</title>
+
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r79/three.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/dat-gui/0.6.1/dat.gui.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/stats.js/r16/Stats.min.js"></script>
+<style>
+  #container canvas {
+    background: #0c0c0c;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: -1; /* وضع الأنيميشن في الخلفية */
+  }
+#codepen-link {
+  position: absolute;
+  bottom: 30px;
+  right: 30px;
+  height: 40px;
+  width: 40px;
+  z-index: 10;
+  border-radius: 50%;
+  box-sizing: border-box;
+  background-image: url('/illuminati.png');
+  background-position: center center;
+  background-size: cover;
+  opacity: 0.4;
+  transition: all 0.25s;
+  &:hover
+    opacity: 0.8;
+    box-shadow: 0 0 6px #efefef;
+ }
+
+#musicPlayerContainer {
+  position: fixed;
+  top: 88%;
+  left: 50%;
+  transform: translate(-50%, -50%); /* لضمان التوسيط الدقيق */
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid grey;
+  border-radius: 20px;
+  padding: 10px 15px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+  width: 150px;
+  text-align: center;
+}
+
+
+    #musicPlayerContainer h1 {
+      font-size: 15px;
+      margin-bottom: 15px;
+      color: #f3f3f3;
+    }
+
+    .controls {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 15px;
+    }
+
+    .controls button {
+      padding: 6px;
+      border: none;
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.2);
+      color: #fff;
+      cursor: pointer;
+      font-size: 14px;
+      transition: background 0.3s;
+    }
+
+    .controls button:hover {
+      background: #f39c12;
+    }
+
+    #progressBar {
+      width: 100%;
+      margin-top: 15px;
+      height: 5px;
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 5px;
+      overflow: hidden;
+      cursor: pointer;
+    }
+
+    #progressBar div {
+      height: 100%;
+      background: #2fa1d6;
+      width: 0;
+      transition: width 0.1s;
+    }
+        
+        
+    #overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.8);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+
+    /* تصميم الرسالة */
+#welcomeMessage {
+  background-color: rgba(0, 0, 0, 0.8); /* خلفية سوداء بشفافية */
+  color: white; /* لجعل النص باللون الأبيض ليتناسب مع الخلفية السوداء */
+  border-radius: 10px;
+  padding: 20px;
+  max-width: 400px;
+  border: 2px solid white; /* حدود بيضاء مع سماكة 2px */
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+  text-align: center;
+}
+
+    #welcomeMessage h1 {
+      margin-bottom: 10px;
+      font-size: 24px;
+      color: white;
+    }
+
+    #welcomeMessage p {
+      margin-bottom: 20px;
+      font-size: 16px;
+      color: white;
+    }
+
+    #welcomeMessage button {
+      background-color: #199c69;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 5px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    #welcomeMessage button:hover {
+      background-color: #0056b3;
+    }        
+        
+        
+        
+.custom-file-label {
+  position: fixed;
+  bottom: 20px;
+  left: 20px;
+  padding: 10px;
+  background-color: rgb(47 161 214 / 21%); /* شفافية مع اللون الأخضر */
+  color: white;
+  cursor: pointer;
+  border-radius: 50%; /* لجعل الزر دائريًا */
+  font-size: 0; /* لإخفاء النص */
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 40px; /* تحديد عرض الزر */
+  height: 40px; /* تحديد ارتفاع الزر */
+}
+
+.custom-file-label img {
+  width: 30px; /* تحديد حجم الأيقونة */
+  height: 30px; /* تحديد حجم الأيقونة */
+}
+
+.custom-file-label:hover {
+  background-color: rgb(115 255 208 / 21%); /* لون #f39c12 مع الشفافية */
+}
+
+
+        
+        
+</style>
+
+</head>
+<body>
+     <label class="custom-file-label" for="fileInput">
+  <img src="/icons8-folder-48.png" alt="Upload Icon">
+</label>
+
+
+<input type="file" id="fileInput" accept="audio/*" style="display: none;">
+
+  <a id="codepen-link" href="https://www.facebook.com/CYB3RN3T1C14N/" target="_blank"></a>
+
+        
+          <div id="overlay">
+    <div id="welcomeMessage">
+      <h1>! أهلاً بك في غرفة التأمل</h1>
+      <p>يمكنك ضبط وتعديل إعدادات التجربة البصرية من خلال التعديل في القيم الموجودة في القائمة على يمين الشاشة, وكذلك يمكنك إخفاء القائمة بالضغط على "كلوس كونترولز" وإذا كنت تستخدم حاسوب أو شاشة كبيرة أضغط الزر "أف 11" لعرض البرنامج في شاشة كاملة. البرنامج يحتوي على قائمة من المؤلفات الموسيقية لـ سام علي, إن لم تعجبك إضغط الزر على يسار الشاشة لإستخدام موسيقى من الهاتف أو الكمبيوتر الخاص بك, واستمتع بتجربة حسّية رائعة</p>
+      <button id="closeMessage">تمام؟</button>
+    </div>
+  </div>
+
+        
+        
+  <!-- عنصر الصوت -->
+ <div id="musicPlayerContainer">
+
+    <!-- قائمة اختيار الأغاني -->
+    <select id="musicSelector">
+      <option value="">--إختر موسيقى--</option>
+      <option value="https://od.lk/s/ODBfNTYzOTc3NzBf/deephouse.wav">حلم اليقظة</option> 
+                  <option value="https://od.lk/s/ODBfNTY0NjUzNjNf/Aliens%20Spirit%20%28Greek%29.wav">يقظة العالم (أغنية)</option> 
+
+                  <option value="https://od.lk/s/ODBfNTY0NjUzNjdf/Aliens%20Spirit.wav">يقظة العالم</option> 
+
+                  <option value="https://od.lk/s/ODBfNTY0NjUzNjVf/ara%20dark.mp3">رحلة الشامان</option> 
+
+                  <option value="https://od.lk/s/ODBfNTY0NjUzNjZf/Darka.mp3">النداء الأخير</option> 
+
+                  <option value="https://od.lk/s/ODBfNTY0NjUzNjhf/nahavand.mp3">وردة الصحراء</option> 
+
+                  <option value="https://od.lk/s/ODBfNTY0NjU1MzZf/nahavand2.wav">رحلة النهاوند</option> 
+
+      <option value="https://od.lk/s/ODBfNTYzOTc3NzJf/Sam%20Ali%20-%20%D9%88%D9%84%D8%A7%D8%AF%D8%A9%20%20%D8%A7%D9%84%D9%86%D9%88%D8%B1.mp3">ولادة النور</option>                        
+
+    </select>
+
+           <input type="file" id="fileInput" accept="audio/*" style="display: none;">
+         
+    <!-- شريط التقدم -->
+    <div id="progressBar">
+      <div></div>
+    </div>
+
+    <!-- أزرار التحكم -->
+<div class="controls" style="display: none;">
+  <button id="playPause">تشغيل</button>
+  <button id="stop">إيقاف</button>
+</div>
+
+    <div id="loadingIndicator" style="display: none;">جارٍ التحميل...</div>     
+         
+    <!-- مشغل الصوت (مخفي) -->
+    <audio id="musicPlayer">
+      <source src="" type="audio/mpeg">
+    </audio>
+  </div>
+
+<script>
+  const musicPlayer = document.getElementById("musicPlayer");
+  const playPauseButton = document.getElementById("playPause");
+  const stopButton = document.getElementById("stop");
+  const progressBar = document.getElementById("progressBar").firstElementChild;
+  const musicSelector = document.getElementById("musicSelector");
+  const loadingIndicator = document.getElementById("loadingIndicator");
+  const fileInput = document.getElementById("fileInput");
+
+  // إخفاء علامة التحميل عند بدء الصفحة
+  loadingIndicator.style.display = "none";
+
+  // عرض علامة التحميل عند الانتظار لبدء الأغنية
+  musicPlayer.addEventListener("waiting", () => {
+    loadingIndicator.style.display = "block";
+  });
+
+  // إخفاء علامة التحميل عند جاهزية الأغنية
+  musicPlayer.addEventListener("canplay", () => {
+    loadingIndicator.style.display = "none";
+  });
+
+  // عند تغيير الأغنية من القائمة المنسدلة
+  musicSelector.addEventListener("change", () => {
+    if (musicSelector.value !== "") {
+      // إظهار الأزرار إذا تم اختيار أغنية
+      document.querySelector(".controls").style.display = "flex";
+      musicPlayer.src = musicSelector.value;
+      musicPlayer.play();
+      playPauseButton.textContent = "إيقاف مؤقت";
+    } else {
+      // إخفاء الأزرار إذا لم يتم اختيار أغنية
+      document.querySelector(".controls").style.display = "none";
+    }
+  });
+
+  // عند تحميل ملف من جهاز الكمبيوتر
+  fileInput.addEventListener("change", (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      const objectURL = URL.createObjectURL(file);
+      musicPlayer.src = objectURL; // تحديث مصدر الموسيقى
+      musicPlayer.play();
+      playPauseButton.textContent = "إيقاف مؤقت";
+      document.querySelector(".controls").style.display = "flex"; // إظهار الأزرار
+    }
+  });
+
+  // تشغيل أو إيقاف الموسيقى
+  playPauseButton.addEventListener("click", () => {
+    if (musicPlayer.paused) {
+      musicPlayer.play();
+      playPauseButton.textContent = "إيقاف مؤقت";
+    } else {
+      musicPlayer.pause();
+      playPauseButton.textContent = "تشغيل";
+    }
+  });
+
+  // إيقاف الموسيقى
+  stopButton.addEventListener("click", () => {
+    musicPlayer.pause();
+    musicPlayer.currentTime = 0;
+    playPauseButton.textContent = "تشغيل";
+  });
+
+  // تحديث شريط التقدم
+  musicPlayer.addEventListener("timeupdate", () => {
+    const progress = (musicPlayer.currentTime / musicPlayer.duration) * 100;
+    progressBar.style.width = `${progress}%`;
+  });
+
+  // التحكم بشريط التقدم
+  progressBar.parentElement.addEventListener("click", (e) => {
+    const clickX = e.offsetX;
+    const width = e.target.clientWidth;
+    const newTime = (clickX / width) * musicPlayer.duration;
+    musicPlayer.currentTime = newTime;
+  });
+</script>
+
+  
+
+  <div id="container">
+  </div>
+
+<style>
+#container canvas
+  background: #0c0c0c
+  position: absolute
+  top: 0
+  left: 0
+  width: 100vw
+  height: 100vh
+
+</style>
+<script>
+/* jshint esversion: 6 */
+((main) => {
+
+  this.requestAnimationFrame = (() => {
+    return window.requestAnimationFrame ||
+      window.webkitRequestAnimationFrame ||
+      window.mozRequestAnimationFrame ||
+      window.oRequestAnimationFrame ||
+      window.msRequestAnimationFrame ||
+      function(callback) {
+        window.setTimeout(callback, 1000 / 60);
+      };
+  })();
+
+  main(this, document, THREE);
+
+})((window, document, three, undefined) => {
+
+  'use strict';
+
+  const APP_DEFAULTS = {
+    dimensions: {
+      x: 0,
+      y: 0
+    },
+    camera: {
+      fov: 70,
+      aspectRatio: 0,
+      nearPlane: 0.1,
+      farPlane: 10000,
+      distanceX: 50,
+      distanceY: 700,
+      distanceZ: -50,
+      speedX: 0.8,
+      speedY: 0.4,
+      speedZ: 0.1
+    },
+    particles: {
+      ySegments: 100,
+      xSegments: 300,
+      size: 1,
+      color: '#67e2f2',
+      waveSpeed: 0.5,
+      waveSizeX: 250,
+      waveSizeY: 0,
+      waveSizeZ: 250
+    }
+  };
+
+  const PI = Math.PI,
+    TAU = PI * 2,
+    COS = Math.cos,
+    SIN = Math.sin;
+
+  class App {
+    constructor() {
+      let self = this;
+      self.props = (JSON.parse(JSON.stringify(APP_DEFAULTS)));
+      self.initCamera();
+      self.initScene();
+      self.initLights();
+      self.stats = new Stats();
+      document.body.appendChild(this.stats.domElement);
+      window.onresize = () => {
+        self.setSize();
+      };
+    }
+
+    setSize() {
+      this.props.dimensions.x = window.innerWidth;
+      this.props.dimensions.y = window.innerHeight;
+      this.renderer.setSize(this.props.dimensions.x, this.props.dimensions.y);
+      this.camera.aspect = this.props.camera.aspectRatio = this.props.dimensions.x / this.props.dimensions.y;
+      this.camera.updateProjectionMatrix();
+    }
+
+    initCamera() {
+      this.camera = new three.PerspectiveCamera(
+        this.props.camera.fov,
+        this.props.camera.aspectRatio,
+        this.props.camera.nearPlane,
+        this.props.camera.farPlane
+      );
+    }
+
+    initScene() {
+      this.scene = new three.Scene();
+      this.scene.add(this.camera);
+      this.renderer = new THREE.WebGLRenderer({
+        alpha: true,
+        antialias: true
+      });
+      this.setSize();
+      this.container = document.querySelector('#container');
+      this.container.appendChild(this.renderer.domElement);
+    }
+
+    initLights() {
+      this.mainLight = new three.HemisphereLight(0x000000, 0xffffff, 0.95);
+      this.mainLight.position.set(0, -500, 0);
+      this.scene.add(this.mainLight);
+
+      this.ambientLight = new three.AmbientLight(0xaaccff, 0.95);
+      this.ambientLight.position.set(-200, -100, 0);
+      this.scene.add(this.ambientLight);
+    }
+
+    render() {
+      let self = this;
+      self.stats.begin();
+      self.update();
+      self.renderer.render(self.scene, self.camera);
+      window.requestAnimationFrame(self.render.bind(self));
+      self.stats.end();
+    }
+
+    update() {}
+  }
+
+  class MandalaCloud extends App {
+    constructor() {
+      super();
+      this.tick = 0;
+      this.build();
+      this.initGUI();
+      this.render();
+    }
+
+    build() {
+      let self = this, 
+        mat = new three.PointsMaterial({
+          color: new three.Color(this.props.particles.color),
+          transparent: true,
+          depthTest: true,
+          size: 1
+        });
+
+      this.geometry = new three.SphereGeometry(400, this.props.particles.ySegments, this.props.particles.xSegments, 0, TAU, 0, TAU);
+
+      this.pointCloud = new three.Points(this.geometry, mat);
+      this.pointCloud.sortParticles = true;
+
+      this.scene.add(this.pointCloud);
+      this.camera.position.set(0, -600, 600);
+    }
+
+    update() {
+      this.tick++;
+      this.delta = this.tick * 0.005;
+      this.geometry.verticesNeedUpdate = true;
+      for (let i = 0; i < this.geometry.vertices.length; i++) {
+        let point = this.geometry.vertices[i],
+          dX = SIN(this.delta + i) * (this.props.particles.waveSizeX * 0.004),
+          dY = COS(this.delta + i) * SIN(this.delta + i) * (this.props.particles.waveSizeY * 0.004),
+          dZ = COS(this.delta + i) * (this.props.particles.waveSizeZ * 0.004);
+        point.add(new three.Vector3(dX, dY, dZ));
+      }
+      this.camera.lookAt(this.pointCloud.position);
+      this.camera.position.x = this.props.camera.distanceX * COS(this.delta * this.props.camera.speedX);
+      this.camera.position.y = this.props.camera.distanceY * COS(this.delta * this.props.camera.speedY);
+      this.camera.position.z = this.props.camera.distanceZ * COS(this.delta * this.props.camera.speedZ);
+    }
+
+    reset() {
+      this.tick = 0;
+      this.scene.remove(this.pointCloud);
+      this.build();
+    }
+
+    initGUI() {
+
+      this.gui = new dat.GUI();
+      let f1 = this.gui.addFolder('إعداد المظهر');
+
+      f1.add(this.props.camera, 'distanceX').step(5).min(-700).max(700);
+      f1.add(this.props.camera, 'distanceY').step(5).min(-700).max(700);
+      f1.add(this.props.camera, 'distanceZ').step(5).min(-700).max(700);
+
+      f1.add(this.props.camera, 'speedX').step(0.1).min(0).max(1);
+      f1.add(this.props.camera, 'speedY').step(0.1).min(0).max(1);
+      f1.add(this.props.camera, 'speedZ').step(0.1).min(0).max(1);
+      f1.open();
+
+      let f2 = this.gui.addFolder('إعداد الجسيمات');
+
+      f2.add(this.props.particles, 'xSegments').step(10).min(10).max(400).onFinishChange(() => {
+        this.reset();
+      });
+      f2.add(this.props.particles, 'ySegments').step(10).min(10).max(400).onFinishChange(() => {
+        this.reset();
+      });
+      f2.add(this.props.particles, 'size').step(1).min(1).max(10).onChange((value) => {
+        this.pointCloud.material.size = value;
+      });
+      f2.addColor(this.props.particles, 'color').onChange((value) => {
+        this.pointCloud.material.color = new three.Color(value);
+      });
+      f2.add(this.props.particles, 'waveSizeX').step(5).min(0).max(400).onFinishChange(() => {
+        this.reset();
+      });
+      f2.add(this.props.particles, 'waveSizeY').step(5).min(0).max(400).onFinishChange(() => {
+        this.reset();
+      });
+      f2.add(this.props.particles, 'waveSizeZ').step(5).min(0).max(400).onFinishChange(() => {
+        this.reset();
+      });
+
+      f2.open();
+    }
+  }
+
+  window.onload = () => {
+    let mc = new MandalaCloud();
+  };
+
+});
+        
+        
+            document.getElementById("closeMessage").addEventListener("click", () => {
+      document.getElementById("overlay").style.display = "none";
+    });
+        
+</script>
+</body>
+</html>
